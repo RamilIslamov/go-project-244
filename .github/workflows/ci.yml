@@ -59,7 +59,7 @@ jobs:
         run: make test
 
       - name: Coverage (artifact)
-        run: make cover && mv coverage.out coverage.txt
+        run: make cover && cp coverage.out coverage.txt
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
