@@ -4,5 +4,3 @@
 https://asciinema.org/connect/a7018a8d-5bb3-49a6-8d95-6e901c892751
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=RamilIslamov_go-project-244&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=RamilIslamov_go-project-244)
-
-![ci](https://github.com/<your_org_or_user>/<repo>/actions/workflows/ci.yml/badge.svg)
