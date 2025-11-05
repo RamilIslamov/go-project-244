@@ -14,7 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
-    # прокидываем секрет в окружение (строкой), чтобы можно было проверять в if
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       HAS_SONAR:   ${{ secrets.SONAR_TOKEN }}
@@ -30,16 +29,13 @@ jobs:
         with:
           go-version: "1.22.x"
           check-latest: true
+          # встраиваемый кеш без 'tar' шумов
+          cache: true
+          cache-dependency-path: |
+            go.sum
+            **/go.sum
 
-      - name: Cache Go build & mod
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum', '**/go.mod') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+      # ---- Больше не нужен отдельный actions/cache шаг ----
 
       - name: Go tidy (check)
         run: |
@@ -71,7 +67,6 @@ jobs:
           name: coverage.txt
           path: coverage.txt
 
-      # SonarCloud Scan — запускаем ТОЛЬКО если секрет есть
       - name: SonarCloud Scan
         if: ${{ env.HAS_SONAR != '' }}
         uses: sonarsource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602
