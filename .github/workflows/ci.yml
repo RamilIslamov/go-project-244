@@ -5,7 +5,6 @@ on:
     branches: ["**"]
   pull_request:
 
-# чтобы параллельные пуши в одну ветку не забивали очередь
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -14,6 +13,9 @@ jobs:
   lint-and-test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Прокидываем секрет в env, чтобы его можно было проверить в if:
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
     steps:
       - name: Checkout
@@ -61,10 +63,11 @@ jobs:
           name: coverage.txt
           path: coverage.txt
 
-      # ---- SonarCloud Scan (запустится, только если задан секрет SONAR_TOKEN) ----
+      # ---- SonarCloud Scan (теперь if проверяет env, а не secrets напрямую) ----
       - name: SonarCloud Scan
-        if: ${{ secrets.SONAR_TOKEN != '' }}
-        uses: sonarsource/sonarqube-scan-action@v2
+        if: ${{ env.SONAR_TOKEN != '' }}
+        # ВАЖНО: зафиксируй экшен на конкретный commit SHA, чтобы убрать Security Hotspot
+        uses: sonarsource/sonarqube-scan-action@<PINNED_SHA>
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
