@@ -13,8 +13,11 @@ jobs:
   lint-and-test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
+    # прокидываем секрет в окружение (строкой), чтобы можно было проверять в if
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      HAS_SONAR:   ${{ secrets.SONAR_TOKEN }}
 
     steps:
       - name: Checkout
@@ -68,12 +71,11 @@ jobs:
           name: coverage.txt
           path: coverage.txt
 
-      # SonarCloud Scan (запустится, только если задан секрет SONAR_TOKEN)
-      # Пин на конкретный commit SHA (v6), чтобы убрать security hotspot
+      # SonarCloud Scan — запускаем ТОЛЬКО если секрет есть
       - name: SonarCloud Scan
-        if: ${{ secrets.SONAR_TOKEN }} 
+        if: ${{ env.HAS_SONAR != '' }}
         uses: sonarsource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
         continue-on-error: true
