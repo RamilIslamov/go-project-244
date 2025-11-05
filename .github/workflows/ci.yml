@@ -1,0 +1,73 @@
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Прокидываем секрет в env, чтобы его можно было проверить в if:
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22.x"
+          check-latest: true
+
+      - name: Cache Go build & mod
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Go tidy (check)
+        run: |
+          go mod tidy
+          git diff --exit-code
+
+      - name: Install golangci-lint
+        run: |
+          GOLANGCI_VERSION=v1.64.8
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCI_VERSION}
+          golangci-lint version
+
+      - name: Lint
+        run: make lint
+
+      - name: Test
+        run: make test
+
+      - name: Coverage (artifact)
+        run: make cover && mv coverage.out coverage.txt
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage.txt
+          path: coverage.txt
+
+      # ---- SonarCloud Scan (теперь if проверяет env, а не secrets напрямую) ----
+      - name: SonarCloud Scan
+        if: ${{ env.SONAR_TOKEN != '' }}
+        # ВАЖНО: зафиксируй экшен на конкретный commit SHA, чтобы убрать Security Hotspot
+        uses: sonarsource/sonarqube-scan-action@<PINNED_SHA>
+        env:
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
