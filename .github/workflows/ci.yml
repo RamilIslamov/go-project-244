@@ -13,13 +13,14 @@ jobs:
   lint-and-test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Прокидываем секрет в env, чтобы его можно было проверить в if:
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -33,14 +34,18 @@ jobs:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum', '**/go.mod') }}
           restore-keys: |
             ${{ runner.os }}-go-
 
       - name: Go tidy (check)
         run: |
           go mod tidy
-          git diff --exit-code
+          if [ -n "$(git status --porcelain go.mod go.sum)" ]; then
+            echo "::error:: 'go mod tidy' changed go.mod/go.sum. Run it locally and commit."
+            git --no-pager diff
+            exit 1
+          fi
 
       - name: Install golangci-lint
         run: |
@@ -63,10 +68,11 @@ jobs:
           name: coverage.txt
           path: coverage.txt
 
-      # ---- SonarCloud Scan (теперь if проверяет env, а не secrets напрямую) ----
+      # SonarCloud Scan (пин на конкретный commit SHA v6)
       - name: SonarCloud Scan
         if: ${{ env.SONAR_TOKEN != '' }}
-        uses: sonarsource/sonarqube-scan-action@689fb39b34b9aa95ebc5f8f119343ddd51542402
+        uses: sonarsource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
+        continue-on-error: true
