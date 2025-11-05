@@ -71,9 +71,9 @@ jobs:
       # SonarCloud Scan (запустится, только если задан секрет SONAR_TOKEN)
       # Пин на конкретный commit SHA (v6), чтобы убрать security hotspot
       - name: SonarCloud Scan
-        if: ${{ env.SONAR_TOKEN != '' }}
+        if: ${{ secrets.SONAR_TOKEN }} 
         uses: sonarsource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602
         env:
-          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
         continue-on-error: true
