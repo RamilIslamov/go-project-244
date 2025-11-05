@@ -213,3 +213,53 @@ func TestGenDiff_FromTempFiles(t *testing.T) {
 		t.Fatalf("GenDiff:\n got:\n%q\nwant:\n%q", got, want)
 	}
 }
+
+func TestDiff_KeyRemoved(t *testing.T) {
+	t.Parallel()
+
+	file1 := map[string]any{"only": 1}
+	file2 := map[string]any{}
+
+	got := diff(file1, file2)
+	want := []string{"  - only: 1"}
+	if len(got) != 1 || got[0] != want[0] {
+		t.Fatalf("got %#v, want %#v", got, want)
+	}
+}
+
+func TestParseFile_AbsError(t *testing.T) {
+	t.Parallel()
+
+	bad := "invalid\x00path.json"
+	if _, err := parseFile(bad); err == nil {
+		t.Fatalf("expected error for path with NUL byte, got nil")
+	}
+}
+
+func TestParseFile_JSONDecodeError(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	p := filepath.Join(dir, "bad.json")
+	// битый JSON
+	if err := os.WriteFile(p, []byte(`{"a":`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := parseFile(p); err == nil {
+		t.Fatalf("expected json decode error, got nil")
+	}
+}
+
+func TestParseFile_YAMLDecodeError(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	p := filepath.Join(dir, "bad.yaml")
+
+	if err := os.WriteFile(p, []byte(": bad"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := parseFile(p); err == nil {
+		t.Fatalf("expected yaml decode error, got nil")
+	}
+}
