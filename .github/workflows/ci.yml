@@ -66,8 +66,7 @@ jobs:
       # ---- SonarCloud Scan (теперь if проверяет env, а не secrets напрямую) ----
       - name: SonarCloud Scan
         if: ${{ env.SONAR_TOKEN != '' }}
-        # ВАЖНО: зафиксируй экшен на конкретный commit SHA, чтобы убрать Security Hotspot
-        uses: sonarsource/sonarqube-scan-action@<PINNED_SHA>
+        uses: sonarsource/sonarqube-scan-action@689fb39b34b9aa95ebc5f8f119343ddd51542402
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
