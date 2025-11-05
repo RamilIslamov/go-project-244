@@ -14,7 +14,7 @@ import (
 
 type Parsed struct {
 	Ext  string
-	Data map[string]string
+	Data map[string]any
 }
 
 func parseFiles(paths ...string) ([]Parsed, error) {
@@ -32,7 +32,7 @@ func parseFiles(paths ...string) ([]Parsed, error) {
 func GenDiff(path1, path2 string) string {
 	parsed, err := parseFiles(path1, path2)
 	if err != nil {
-		log.Fatalf("parse %q: %w", path1, err)
+		log.Fatalf("parse %q: %v", path1, err)
 	}
 	file1 := parsed[0].Data
 	file2 := parsed[1].Data
@@ -40,7 +40,7 @@ func GenDiff(path1, path2 string) string {
 	return formatResults(diff(file1, file2))
 }
 
-func diff(file1, file2 map[string]string) []string {
+func diff(file1, file2 map[string]any) []string {
 	union := make([]string, 0, len(file1)+len(file2))
 	seen := make(map[string]struct{}, len(file1)+len(file2))
 
@@ -106,7 +106,7 @@ func parseFile(path string) (Parsed, error) {
 	switch ext {
 	case ".json":
 		dec := json.NewDecoder(bytes.NewReader(data))
-		dec.UseNumber()
+		dec.UseNumber() // числа будут json.Number, а не float64
 		if err := dec.Decode(&raw); err != nil {
 			return Parsed{}, fmt.Errorf("json decode %q: %w", abs, err)
 		}
@@ -114,32 +114,13 @@ func parseFile(path string) (Parsed, error) {
 		if err := yaml.Unmarshal(data, &raw); err != nil {
 			return Parsed{}, fmt.Errorf("yaml decode %q: %w", abs, err)
 		}
+		// yaml.v3 отдаёт числа как int/float64 — это ок для твоего getInt
 	default:
 		return Parsed{}, fmt.Errorf("unsupported file extension: %s", ext)
 	}
 
-	out := make(map[string]string, len(raw))
-	for k, v := range raw {
-		switch t := v.(type) {
-		case nil:
-			out[k] = ""
-		case string:
-			out[k] = t
-		case json.Number:
-			out[k] = t.String()
-		case float64, bool, int, int64, uint64:
-			out[k] = fmt.Sprint(t)
-		default:
-			b, err := json.Marshal(t)
-			if err != nil {
-				return Parsed{}, fmt.Errorf("key %s: cannot stringify %T: %w", k, t, err)
-			}
-			out[k] = string(b)
-		}
-	}
-
 	return Parsed{
 		Ext:  ext,
-		Data: out,
+		Data: raw,
 	}, nil
 }

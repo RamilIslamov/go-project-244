@@ -27,43 +27,41 @@ func getInt(v any) (int64, bool) {
 }
 
 func TestParseFile_RelativePath(t *testing.T) {
-	t.Parallel()
-
 	dir := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(dir, "a", "b"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	full := filepath.Join(dir, "a", "b", "config.json")
 	wantMap := map[string]any{"ok": true}
-
 	if err := os.WriteFile(full, []byte(`{"ok": true}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	// рабочая директория = dir, чтобы относительный путь резолвился
-	wd, _ := os.Getwd()
-	defer os.Chdir(wd)
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Cleanup(func() {
+		if err := os.Chdir(wd); err != nil {
+			t.Fatalf("restore cwd: %v", err)
+		}
+	})
+
 	if err := os.Chdir(dir); err != nil {
 		t.Fatal(err)
 	}
 
 	rel := filepath.Join("a", "b", "..", "b", "config.json")
-
 	got, err := parseFile(rel)
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	if got.Ext != ".json" {
 		t.Fatalf("Ext = %q, want %q", got.Ext, ".json")
 	}
-
-	data, ok := got.Data.(map[string]any)
-	if !ok {
-		t.Fatalf("Data type = %T, want map[string]any", got.Data)
-	}
-	if !reflect.DeepEqual(data, wantMap) {
-		t.Errorf("Data = %#v, want %#v", data, wantMap)
+	if !reflect.DeepEqual(got.Data, wantMap) {
+		t.Fatalf("data mismatch:\n got: %#v\nwant: %#v", got.Data, wantMap)
 	}
 }
 
@@ -86,10 +84,7 @@ func TestParseFile_AbsolutePath(t *testing.T) {
 		t.Fatalf("Ext = %q, want %q", got.Ext, ".json")
 	}
 
-	data, ok := got.Data.(map[string]any)
-	if !ok {
-		t.Fatalf("Data type = %T, want map[string]any", got.Data)
-	}
+	data := got.Data
 
 	val, exists := data["ok"]
 	if !exists {
