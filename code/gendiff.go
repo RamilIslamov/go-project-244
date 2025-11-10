@@ -1,41 +1,20 @@
 package code
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v3"
+	"github.com/RamilIslamov/go-project-244/parsers"
 	"log"
-	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 )
 
-type Parsed struct {
-	Ext  string
-	Data map[string]any
-}
-
-func parseFiles(paths ...string) ([]Parsed, error) {
-	res := make([]Parsed, 0, len(paths))
-	for _, p := range paths {
-		parsed, err := parseFile(p)
-		if err != nil {
-			return nil, fmt.Errorf("parse %q: %w", p, err)
-		}
-		res = append(res, parsed)
-	}
-	return res, nil
-}
-
 func GenDiff(path1, path2 string) string {
-	parsed, err := parseFiles(path1, path2)
+	parsed, err := parsers.ParseFiles(path1, path2)
 	if err != nil {
 		log.Fatalf("parse %q: %v", path1, err)
 	}
-	file1 := parsed[0].Data
-	file2 := parsed[1].Data
+	file1 := parsed[0]
+	file2 := parsed[1]
 
 	return formatResults(diff(file1, file2))
 }
@@ -82,40 +61,4 @@ func formatResults(res []string) string {
 	}
 	b.WriteString("}")
 	return b.String()
-}
-
-func parseFile(path string) (Parsed, error) {
-	abs, err := filepath.Abs(path)
-	if err != nil {
-		return Parsed{}, fmt.Errorf("abs(%q): %w", path, err)
-	}
-
-	data, err := os.ReadFile(abs)
-	if err != nil {
-		return Parsed{}, fmt.Errorf("read %q: %w", abs, err)
-	}
-
-	ext := filepath.Ext(abs)
-
-	var raw map[string]any
-	switch ext {
-	case ".json":
-		dec := json.NewDecoder(bytes.NewReader(data))
-		dec.UseNumber() // числа будут json.Number, а не float64
-		if err := dec.Decode(&raw); err != nil {
-			return Parsed{}, fmt.Errorf("json decode %q: %w", abs, err)
-		}
-	case ".yaml", ".yml":
-		if err := yaml.Unmarshal(data, &raw); err != nil {
-			return Parsed{}, fmt.Errorf("yaml decode %q: %w", abs, err)
-		}
-		// yaml.v3 отдаёт числа как int/float64 — это ок для твоего getInt
-	default:
-		return Parsed{}, fmt.Errorf("unsupported file extension: %s", ext)
-	}
-
-	return Parsed{
-		Ext:  ext,
-		Data: raw,
-	}, nil
 }
