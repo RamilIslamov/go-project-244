@@ -1,7 +1,7 @@
 package plain
 
 import (
-	"code/code/ast"
+	"github.com/RamilIslamov/go-project-244/code/ast"
 	"testing"
 )
 
