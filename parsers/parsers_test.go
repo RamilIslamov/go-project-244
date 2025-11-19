@@ -190,3 +190,78 @@ func TestParseFiles_Error(t *testing.T) {
 		t.Fatalf("expected error, got nil")
 	}
 }
+
+func TestDeepMerge_NestedMaps(t *testing.T) {
+	t.Parallel()
+
+	dst := map[string]any{
+		"common": map[string]any{
+			"setting1": "Value 1",
+			"setting2": 10,
+		},
+	}
+
+	src := map[string]any{
+		"common": map[string]any{
+			"setting2": 20,
+			"setting3": true,
+		},
+	}
+
+	deepMerge(dst, src)
+
+	common, ok := dst["common"].(map[string]any)
+	if !ok {
+		t.Fatalf(`"common" has wrong type: %T`, dst["common"])
+	}
+
+	if common["setting1"] != "Value 1" {
+		t.Fatalf(`setting1 = %#v, want "Value 1"`, common["setting1"])
+	}
+	if n, ok := getInt(common["setting2"]); !ok || n != 20 {
+		t.Fatalf(`setting2 = %#v, want 20`, common["setting2"])
+	}
+	if v, ok := common["setting3"]; !ok || v != true {
+		t.Fatalf(`setting3 = %#v, want true`, common["setting3"])
+	}
+}
+
+func TestParseFile_YAML_OK(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	p := filepath.Join(dir, "good.yaml")
+
+	yamlData := []byte(`
+a: 1
+b: true
+nested:
+  c: 3
+`)
+
+	if err := os.WriteFile(p, yamlData, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := parseFile(p)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// проверяем, что значения действительно распарсились
+	if n, ok := getInt(got["a"]); !ok || n != 1 {
+		t.Fatalf(`"a" = %#v, want 1`, got["a"])
+	}
+
+	if v, ok := got["b"]; !ok || v != true {
+		t.Fatalf(`"b" = %#v, want true`, v)
+	}
+
+	nested, ok := got["nested"].(map[string]any)
+	if !ok {
+		t.Fatalf(`"nested" has wrong type: %T`, got["nested"])
+	}
+	if n, ok := getInt(nested["c"]); !ok || n != 3 {
+		t.Fatalf(`nested["c"] = %#v, want 3`, nested["c"])
+	}
+}
