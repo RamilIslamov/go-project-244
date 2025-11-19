@@ -38,7 +38,7 @@ func parseFile(path string) (map[string]any, error) {
 		if err := parseJSON(dst, data, abs); err != nil {
 			return nil, err
 		}
-		normalizeJSONNumbers(dst)
+		normalizeJSONNumbersAny(dst)
 	case ".yaml", ".yml":
 		if err := parseYAML(dst, data, abs); err != nil {
 			return nil, err
@@ -58,7 +58,8 @@ func parseJSON(dst map[string]any, data []byte, abs string) error {
 	if err := dec.Decode(&tmp); err != nil {
 		return fmt.Errorf("json decode %q: %w", abs, err)
 	}
-	mergeInto(dst, tmp)
+	tmp = normalizeJSONNumbersAny(tmp).(map[string]any)
+	deepMerge(dst, tmp)
 	return nil
 }
 
@@ -67,42 +68,47 @@ func parseYAML(dst map[string]any, data []byte, abs string) error {
 	if err := yaml.Unmarshal(data, &tmp); err != nil {
 		return fmt.Errorf("yaml decode %q: %w", abs, err)
 	}
-	mergeInto(dst, tmp)
+
+	tmp = normalizeJSONNumbersAny(tmp).(map[string]any)
+	deepMerge(dst, tmp)
 	return nil
 }
 
-func mergeInto(dst, src map[string]any) {
-	for k, v := range src {
-		dst[k] = v
+func deepMerge(dst, src map[string]any) {
+	for k, sv := range src {
+		if dv, ok := dst[k]; ok {
+			dm, dok := dv.(map[string]any)
+			sm, sok := sv.(map[string]any)
+			if dok && sok {
+				deepMerge(dm, sm)
+				continue
+			}
+		}
+		dst[k] = sv
 	}
 }
 
-func normalizeJSONNumbers(m map[string]any) {
-	for k, v := range m {
-		switch vv := v.(type) {
-		case json.Number:
-			if i, err := vv.Int64(); err == nil {
-				m[k] = i
-				continue
-			}
-			if f, err := vv.Float64(); err == nil {
-				m[k] = f
-			}
-		case map[string]any:
-			normalizeJSONNumbers(vv)
-		case []any:
-			for i, e := range vv {
-				switch ee := e.(type) {
-				case json.Number:
-					if ii, err := ee.Int64(); err == nil {
-						vv[i] = ii
-					} else if ff, err := ee.Float64(); err == nil {
-						vv[i] = ff
-					}
-				case map[string]any:
-					normalizeJSONNumbers(ee)
-				}
-			}
+func normalizeJSONNumbersAny(v any) any {
+	switch x := v.(type) {
+	case json.Number:
+		if i, err := x.Int64(); err == nil {
+			return i
 		}
+		if f, err := x.Float64(); err == nil {
+			return f
+		}
+		return v
+	case map[string]any:
+		for k, vv := range x {
+			x[k] = normalizeJSONNumbersAny(vv)
+		}
+		return x
+	case []any:
+		for i, vv := range x {
+			x[i] = normalizeJSONNumbersAny(vv)
+		}
+		return x
+	default:
+		return v
 	}
 }

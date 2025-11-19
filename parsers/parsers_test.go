@@ -64,6 +64,7 @@ func TestParseFile_AbsError(t *testing.T) {
 }
 
 func TestParseFile_RelativePath(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(dir, "a", "b"), 0o755); err != nil {
 		t.Fatal(err)
