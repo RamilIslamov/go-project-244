@@ -23,6 +23,14 @@ type Node struct {
 	Children []Node
 }
 
+type JsonNode struct {
+	Key      string     `json:"key"`
+	Type     string     `json:"type"`
+	OldValue any        `json:"oldValue,omitempty"`
+	NewValue any        `json:"newValue,omitempty"`
+	Children []JsonNode `json:"children,omitempty"`
+}
+
 func BuildDiff(a, b map[string]any) []Node {
 	keys := unionKeys(a, b)
 	sort.Strings(keys)

@@ -55,7 +55,7 @@ func TestRenderPlain(t *testing.T) {
 		},
 	}
 
-	got := Render(nodes)
+	got, _ := Render(nodes)
 
 	want := "" +
 		"Property 'host' was updated. From 'hexlet.io' to 'hexlet.com'\n" +

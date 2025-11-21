@@ -17,7 +17,7 @@ func TestRender_SimpleDiff(t *testing.T) {
 		{Key: "b", Action: ast.Unchanged, OldVal: 2},
 		{Key: "c", Action: ast.Added, NewVal: 3},
 	}
-	got := Render(nodes)
+	got, _ := Render(nodes)
 	want := "{\n" +
 		"  - a: 1\n" +
 		"  + a: 0\n" +
@@ -51,7 +51,7 @@ func TestRender_NestedAndUpdated(t *testing.T) {
 		},
 	}
 
-	got := Render(nodes)
+	got, _ := Render(nodes)
 
 	want := "{\n" +
 		"    root: {\n" +

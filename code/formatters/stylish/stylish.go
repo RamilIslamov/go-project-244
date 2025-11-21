@@ -17,11 +17,11 @@ func indent(depth int) string {
 	return strings.Repeat(" ", n)
 }
 
-func Render(nodes []ast.Node) string {
+func Render(nodes []ast.Node) (string, error) {
 	return render(nodes, 1)
 }
 
-func render(nodes []ast.Node, depth int) string {
+func render(nodes []ast.Node, depth int) (string, error) {
 	base := indent(depth)
 	closeIndent := strings.Repeat(" ", (depth-1)*indentSize)
 
@@ -30,7 +30,11 @@ func render(nodes []ast.Node, depth int) string {
 	for _, n := range nodes {
 		switch n.Action {
 		case ast.Nested:
-			b.WriteString(fmt.Sprintf("%s  %s: %s\n", base, n.Key, render(n.Children, depth+1)))
+			childStr, err := render(n.Children, depth+1)
+			if err != nil {
+				return "", fmt.Errorf("render nested %q: %w", n.Key, err)
+			}
+			b.WriteString(fmt.Sprintf("%s  %s: %s\n", base, n.Key, childStr))
 		case ast.Unchanged:
 			b.WriteString(fmt.Sprintf("%s  %s: %s\n", base, n.Key, stringify(n.OldVal, depth+1)))
 		case ast.Removed:
@@ -43,7 +47,7 @@ func render(nodes []ast.Node, depth int) string {
 		}
 	}
 	b.WriteString(closeIndent + "}")
-	return b.String()
+	return b.String(), nil
 }
 
 func stringify(v any, depth int) string {

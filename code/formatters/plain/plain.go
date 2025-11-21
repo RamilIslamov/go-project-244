@@ -6,11 +6,11 @@ import (
 	"strings"
 )
 
-func Render(nodes []ast.Node) string {
+func Render(nodes []ast.Node) (string, error) {
 	return render(nodes, "")
 }
 
-func render(nodes []ast.Node, parentPath string) string {
+func render(nodes []ast.Node, parentPath string) (string, error) {
 	base := "Property"
 	var b strings.Builder
 
@@ -20,7 +20,11 @@ func render(nodes []ast.Node, parentPath string) string {
 		switch n.Action {
 
 		case ast.Nested:
-			b.WriteString(render(n.Children, propPath))
+			childStr, err := render(n.Children, propPath)
+			if err != nil {
+				return "", fmt.Errorf("render nested %q: %w", n.Key, err)
+			}
+			b.WriteString(childStr)
 
 		case ast.Removed:
 			fmt.Fprintf(&b, "%s '%s' was removed\n", base, propPath)
@@ -36,7 +40,7 @@ func render(nodes []ast.Node, parentPath string) string {
 		}
 	}
 
-	return b.String()
+	return b.String(), nil
 }
 
 func buildPath(parent, key string) string {
