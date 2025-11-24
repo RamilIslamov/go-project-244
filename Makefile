@@ -58,8 +58,8 @@ test:
 	cd code && CGO_ENABLED=$(CGO_TEST) go test $(PKG) $(RACE_FLAG) -count=1
 
 cover:
-	cd code && CGO_ENABLED=$(CGO_TEST) go test $(PKG) $(RACE_FLAG) \
-		-coverprofile="$(COVER_PROFILE)" -covermode=atomic
+	cd code && CGO_ENABLED=$(CGO_TEST) go test ./... $(RACE_FLAG) \
+		-coverprofile="../$(COVER_PROFILE)" -covermode=atomic
 	@go tool cover -func="$(COVER_PROFILE)" | tail -n 1
 
 tools:
