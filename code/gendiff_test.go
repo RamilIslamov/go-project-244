@@ -1,4 +1,4 @@
-package go_project_244
+package code
 
 import (
 	"os"

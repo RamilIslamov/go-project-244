@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/RamilIslamov/go-project-244/code"
+	"code"
 	urfaveCli "github.com/urfave/cli/v3"
 )
 
