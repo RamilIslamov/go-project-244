@@ -1,11 +1,10 @@
 package json
 
 import (
+	"code/ast"
 	stdjson "encoding/json"
 	"reflect"
 	"testing"
-
-	"github.com/RamilIslamov/go-project-244/code/ast"
 )
 
 func TestToJSONNodes_AllActions(t *testing.T) {

@@ -1,8 +1,8 @@
 package plain
 
 import (
+	"code/ast"
 	"fmt"
-	"github.com/RamilIslamov/go-project-244/code/ast"
 	"strings"
 )
 

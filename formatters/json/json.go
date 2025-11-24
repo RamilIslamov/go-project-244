@@ -1,8 +1,8 @@
 package json
 
 import (
+	"code/ast"
 	"encoding/json"
-	"github.com/RamilIslamov/go-project-244/code/ast"
 )
 
 func Render(nodes []ast.Node) (string, error) {

@@ -1,11 +1,11 @@
 package formatters
 
 import (
+	"code/ast"
+	"code/formatters/json"
+	"code/formatters/plain"
+	"code/formatters/stylish"
 	"fmt"
-	"github.com/RamilIslamov/go-project-244/code/ast"
-	"github.com/RamilIslamov/go-project-244/code/formatters/json"
-	"github.com/RamilIslamov/go-project-244/code/formatters/plain"
-	"github.com/RamilIslamov/go-project-244/code/formatters/stylish"
 )
 
 func Render(format string, nodes []ast.Node) (string, error) {

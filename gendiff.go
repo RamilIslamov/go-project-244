@@ -1,10 +1,10 @@
-package code
+package go_project_244
 
 import (
+	"code/ast"
+	"code/formatters"
+	"code/parsers"
 	"fmt"
-	"github.com/RamilIslamov/go-project-244/code/ast"
-	"github.com/RamilIslamov/go-project-244/code/formatters"
-	"github.com/RamilIslamov/go-project-244/parsers"
 )
 
 func GenDiff(path1, path2, format string) (string, error) {

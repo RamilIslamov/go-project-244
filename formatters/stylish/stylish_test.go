@@ -1,7 +1,7 @@
 package stylish
 
 import (
-	"github.com/RamilIslamov/go-project-244/code/ast"
+	"code/ast"
 	"strings"
 	"testing"
 )
