@@ -2,15 +2,20 @@ package json
 
 import (
 	"code/ast"
-	"encoding/json"
+	stdjson "encoding/json"
+	"fmt"
 )
 
 func Render(nodes []ast.Node) (string, error) {
 	j := toJSONNodes(nodes)
 
-	data, err := json.MarshalIndent(j, "", "  ")
+	payload := map[string]any{
+		"diff": j,
+	}
+
+	data, err := stdjson.MarshalIndent(payload, "", "  ")
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("marshal json: %w", err)
 	}
 
 	return string(data), nil

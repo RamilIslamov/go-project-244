@@ -138,10 +138,14 @@ func TestRender_ReturnsValidJSON(t *testing.T) {
 		t.Fatalf("Render returned invalid JSON:\n%s", out)
 	}
 
-	var got []ast.JsonNode
-	if err := stdjson.Unmarshal([]byte(out), &got); err != nil {
+	var parsed struct {
+		Diff []ast.JsonNode `json:"diff"`
+	}
+	if err := stdjson.Unmarshal([]byte(out), &parsed); err != nil {
 		t.Fatalf("unmarshal output: %v\njson: %s", err, out)
 	}
+
+	got := parsed.Diff
 
 	if len(got) != 1 {
 		t.Fatalf("len(top-level) = %d, want 1", len(got))
