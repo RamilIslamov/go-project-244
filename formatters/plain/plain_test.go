@@ -62,7 +62,7 @@ func TestRenderPlain(t *testing.T) {
 		"Property 'timeout' was removed\n" +
 		"Property 'verbose' was added with value: true\n" +
 		"Property 'common.setting6.doge.wow' was updated. From '' to 'so much'\n" +
-		"Property 'obj' was updated. From [complex value] to [complex value]\n"
+		"Property 'obj' was updated. From [complex value] to [complex value]"
 
 	if got != want {
 		t.Fatalf("Render() result mismatch.\n--- got ---\n%q\n--- want ---\n%q\n", got, want)

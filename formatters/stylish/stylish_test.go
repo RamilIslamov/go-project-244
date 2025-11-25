@@ -74,9 +74,9 @@ func TestStringify_Map(t *testing.T) {
 	got := stringify(m, 1)
 
 	want := "{\n" +
-		"        a: 1\n" +
-		"        b: 2\n" +
-		"  }"
+		"    a: 1\n" +
+		"    b: 2\n" +
+		"}"
 
 	if nl(got) != nl(want) {
 		t.Fatalf("stringify(map) mismatch\n--- got ---\n%s\n--- want ---\n%s", got, want)
@@ -89,9 +89,9 @@ func TestStringify_Array(t *testing.T) {
 	got := stringify(arr, 1)
 
 	want := "[\n" +
-		"        1\n" +
-		"        x\n" +
-		"  ]"
+		"    1\n" +
+		"    x\n" +
+		"]"
 
 	if nl(got) != nl(want) {
 		t.Fatalf("stringify([]any) mismatch\n--- got ---\n%s\n--- want ---\n%s", got, want)
