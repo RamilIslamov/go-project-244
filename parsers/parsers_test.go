@@ -265,3 +265,96 @@ nested:
 		t.Fatalf(`nested["c"] = %#v, want 3`, nested["c"])
 	}
 }
+
+func TestNormalizeJSONNumbersAny_IntNumber(t *testing.T) {
+	t.Parallel()
+
+	in := json.Number("42")
+
+	out := normalizeJSONNumbersAny(in)
+
+	v, ok := out.(int64)
+	if !ok {
+		t.Fatalf("want int64, got %T (%v)", out, out)
+	}
+	if v != 42 {
+		t.Fatalf("value = %d, want 42", v)
+	}
+}
+
+func TestNormalizeJSONNumbersAny_FloatNumber(t *testing.T) {
+	t.Parallel()
+
+	in := json.Number("3.14")
+
+	out := normalizeJSONNumbersAny(in)
+
+	f, ok := out.(float64)
+	if !ok {
+		t.Fatalf("want float64, got %T (%v)", out, out)
+	}
+	if f != 3.14 {
+		t.Fatalf("value = %v, want 3.14", f)
+	}
+}
+
+func TestNormalizeJSONNumbersAny_InvalidNumber(t *testing.T) {
+	t.Parallel()
+
+	// Int64 и Float64 оба вернут ошибку -> должно вернуться исходное значение
+	in := json.Number("not-a-number")
+
+	out := normalizeJSONNumbersAny(in)
+
+	if out != in {
+		t.Fatalf("expected original json.Number to be returned, got %#v", out)
+	}
+}
+
+func TestNormalizeJSONNumbersAny_MapRecursion(t *testing.T) {
+	t.Parallel()
+
+	in := map[string]any{
+		"a": json.Number("1"),
+		"b": "text", // попадём в default-ветку
+	}
+
+	outAny := normalizeJSONNumbersAny(in)
+
+	out, ok := outAny.(map[string]any)
+	if !ok {
+		t.Fatalf("want map[string]any, got %T", outAny)
+	}
+
+	a, ok := out["a"].(int64)
+	if !ok || a != 1 {
+		t.Fatalf(`"a" = %#v (%T), want int64(1)`, out["a"], out["a"])
+	}
+	if out["b"] != "text" {
+		t.Fatalf(`"b" = %#v, want "text"`, out["b"])
+	}
+}
+
+func TestNormalizeJSONNumbersAny_SliceRecursion(t *testing.T) {
+	t.Parallel()
+
+	in := []any{
+		json.Number("2"),
+		"ok", // default
+	}
+
+	outAny := normalizeJSONNumbersAny(in)
+
+	out, ok := outAny.([]any)
+	if !ok {
+		t.Fatalf("want []any, got %T", outAny)
+	}
+
+	n, ok := out[0].(int64)
+	if !ok || n != 2 {
+		t.Fatalf("out[0] = %#v (%T), want int64(2)", out[0], out[0])
+	}
+	if out[1] != "ok" {
+		t.Fatalf(`out[1] = %#v, want "ok"`, out[1])
+	}
+}

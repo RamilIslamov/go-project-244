@@ -55,8 +55,8 @@ func stringify(v any, depth int) string {
 		return "null"
 	}
 
-	base := indent(depth)
-	inner := strings.Repeat(" ", depth*indentSize+2)
+	valueIndent := strings.Repeat(" ", depth*indentSize)
+	closingIndent := strings.Repeat(" ", (depth-1)*indentSize)
 
 	if m, ok := v.(map[string]any); ok {
 		keys := make([]string, 0, len(m))
@@ -68,10 +68,9 @@ func stringify(v any, depth int) string {
 		var b strings.Builder
 		b.WriteString("{\n")
 		for _, k := range keys {
-			b.WriteString(fmt.Sprintf("%s  %s: %s\n", inner, k, stringify(m[k], depth+1)))
+			b.WriteString(fmt.Sprintf("%s%s: %s\n", valueIndent, k, stringify(m[k], depth+1)))
 		}
-
-		b.WriteString(base + "}")
+		b.WriteString(closingIndent + "}")
 		return b.String()
 	}
 
@@ -79,9 +78,9 @@ func stringify(v any, depth int) string {
 		var b strings.Builder
 		b.WriteString("[\n")
 		for _, el := range arr {
-			b.WriteString(fmt.Sprintf("%s  %s\n", inner, stringify(el, depth+1)))
+			b.WriteString(fmt.Sprintf("%s%s\n", valueIndent, stringify(el, depth+1)))
 		}
-		b.WriteString(base + "]")
+		b.WriteString(closingIndent + "]")
 		return b.String()
 	}
 

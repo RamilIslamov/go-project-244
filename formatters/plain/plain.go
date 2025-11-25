@@ -7,7 +7,11 @@ import (
 )
 
 func Render(nodes []ast.Node) (string, error) {
-	return render(nodes, "")
+	s, err := render(nodes, "")
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimRight(s, "\n"), nil
 }
 
 func render(nodes []ast.Node, parentPath string) (string, error) {
