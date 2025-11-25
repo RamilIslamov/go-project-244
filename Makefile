@@ -36,7 +36,7 @@ build: $(BIN)
 $(BIN):
 	@mkdir -p "$(BIN_DIR)"
 	GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=$(CGO_ENABLED) \
-		cd code && go build -ldflags="-s -w" -o "$(BIN)" ./cmd/gendiff/main.go
+		go build -ldflags="-s -w" -o "$(BIN)" ./cmd/gendiff/main.go
 
 run: build
 	./"$(BIN)"
@@ -46,20 +46,20 @@ clean:
 
 # ===== quality =====
 tidy:
-	cd code && go mod tidy
+	go mod tidy
 
 fmt:
-	cd code && go fmt $(PKG)
+	go fmt $(PKG)
 
 vet:
-	cd code && go vet $(PKG)
+	go vet $(PKG)
 
 test:
-	cd code && CGO_ENABLED=$(CGO_TEST) go test $(PKG) $(RACE_FLAG) -count=1
+	CGO_ENABLED=$(CGO_TEST) go test $(PKG) $(RACE_FLAG) -count=1
 
 cover:
-	cd code && CGO_ENABLED=$(CGO_TEST) go test ./... $(RACE_FLAG) \
-		-coverprofile="../$(COVER_PROFILE)" -covermode=atomic
+	CGO_ENABLED=$(CGO_TEST) go test ./... $(RACE_FLAG) \
+		-coverprofile="$(COVER_PROFILE)" -covermode=atomic
 	@go tool cover -func="$(COVER_PROFILE)" | tail -n 1
 
 tools:
@@ -70,4 +70,4 @@ tools:
 
 lint: tools
 	@golangci-lint version
-	cd code && golangci-lint run ./...
+	golangci-lint run ./...
